@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>문화 다양성 교육 연수 프로그램</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Calm Harmony (Beige, Slate, Teal) -->
+    <!-- Application Structure Plan: An interactive dashboard featuring a filterable grid of workshop 'cards'. Clicking a card opens a modal with the detailed 2-hour plan. This structure replaces linear document scrolling with a task-oriented, discoverable interface. Filters for target audience (teacher, student, parent) are key to usability, allowing users to instantly access relevant information. -->
+    <!-- Visualization & Content Choices: Report Info: 10 detailed workshop plans. -> Goal: Organize & Detail. -> Viz/Presentation Method: Interactive card grid and modal pop-ups. -> Interaction: Click filters to sort cards, click cards to view details in a modal. -> Justification: Breaks down dense information, provides a quick overview, and allows deep-dives without losing context, which is far superior to a PDF. -> Library/Method: HTML/CSS/Tailwind for structure, Vanilla JS for filtering and modal logic. -> CONFIRMING NO SVG/Mermaid. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+        }
+        .card-icon {
+            font-size: 2.5rem;
+            line-height: 1;
+        }
+        .filter-button.active {
+            background-color: #0d9488;
+            color: white;
+        }
+        .modal {
+            transition: opacity 0.25s ease;
+        }
+        body.modal-active {
+            overflow-x: hidden;
+            overflow-y: hidden;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+
+    <div class="container mx-auto px-4 py-8 sm:py-12">
+        <header class="text-center mb-8 sm:mb-12">
+            <h1 class="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-800">문화 다양성 교육 연수 프로그램</h1>
+            <p class="mt-4 text-base sm:text-lg text-gray-600 max-w-3xl mx-auto">
+                다양한 교육 주체를 위한 10가지 맞춤형 연수 계획서입니다.<br>아래 필터를 사용하여 대상을 선택하거나, 관심 있는 카드를 클릭하여 상세 계획을 확인해보세요.
+            </p>
+        </header>
+
+        <div id="filters" class="flex flex-wrap justify-center gap-2 mb-8 sm:mb-10">
+            <button class="filter-button active py-2 px-4 bg-white text-gray-700 rounded-full shadow-sm text-sm sm:text-base font-medium transition hover:bg-gray-100" data-filter="all">전체</button>
+            <button class="filter-button py-2 px-4 bg-white text-gray-700 rounded-full shadow-sm text-sm sm:text-base font-medium transition hover:bg-gray-100" data-filter="교사">교사</button>
+            <button class="filter-button py-2 px-4 bg-white text-gray-700 rounded-full shadow-sm text-sm sm:text-base font-medium transition hover:bg-gray-100" data-filter="학생">학생</button>
+            <button class="filter-button py-2 px-4 bg-white text-gray-700 rounded-full shadow-sm text-sm sm:text-base font-medium transition hover:bg-gray-100" data-filter="학부모">학부모</button>
+            <button class="filter-button py-2 px-4 bg-white text-gray-700 rounded-full shadow-sm text-sm sm:text-base font-medium transition hover:bg-gray-100" data-filter="공동">학생-교사/학부모</button>
+        </div>
+
+        <div id="workshop-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        </div>
+    </div>
+
+    <div id="workshop-modal" class="modal fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50 opacity-0 pointer-events-none">
+        <div class="bg-white rounded-lg shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto transform scale-95 transition-transform duration-300">
+            <div id="modal-content" class="p-6 sm:p-8">
+            </div>
+            <div class="sticky bottom-0 bg-gray-100 px-6 py-3 text-right border-t">
+                 <button id="close-modal-button" class="py-2 px-5 bg-teal-600 text-white rounded-md font-semibold hover:bg-teal-700 transition">닫기</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    const workshops = [
+        {
+            title: "우리 학교만의 '문화 다양성 주간' 만들기",
+            target: "교사",
+            targetDetail: "초·중·고 교사, 교육과정 담당자",
+            icon: "🗓️",
+            summary: "학교 특색에 맞는 문화 다양성 주간 프로그램을 공동으로 기획하고 구체적인 운영 계획을 수립합니다.",
+            goals: [
+                "문화 다양성 주간의 의미와 필요성을 이해한다.",
+                "타 학교의 우수 사례를 분석하고 우리 학교에 적용할 아이디어를 탐색한다.",
+                "실행 가능한 '문화 다양성 주간' 프로그램을 공동으로 기획하고 구체적인 운영 계획을 수립할 수 있다."
+            ],
+            materials: "노트북 또는 태블릿, 포스트잇, 전지, 매직펜, 우수 사례 영상 자료",
+            plan: [
+                { stage: "도입 (15분)", detail: "마음 열기 및 주제 탐색: 아이스브레이킹, 연수 목표 및 '문화 다양성 주간'의 중요성 안내 (영상 시청 포함)" },
+                { stage: "전개 1 (45분)", detail: "우수 사례 탐구 및 아이디어 발상: 국내외 우수 사례 분석, '우리 학교에서 하고 싶은 활동' 브레인스토밍" },
+                { stage: "전개 2 (40분)", detail: "우리 학교 맞춤형 프로그램 기획: '문화 다양성 주간' 미니 기획안 작성 및 갤러리 워크를 통한 공유 및 피드백" },
+                { stage: "정리 및 나눔 (20분)", detail: "실행 다짐 및 질의응답: 모둠별 최종 아이디어 및 연수 소감 나누기, 학교 현장 적용을 위한 질의응답" }
+            ]
+        },
+        {
+            title: "그림책으로 시작하는 독서 토론 수업",
+            target: "교사",
+            targetDetail: "초등학교 교사, 독서 교육 담당 교사",
+            icon: "📚",
+            summary: "'질문이 있는 서울형 토론' 모델을 활용하여 문화 다양성 주제의 그림책 토론 수업을 설계하고 실습합니다.",
+            goals: [
+                "문화 다양성 주제 독서 토론의 교육적 가치를 이해한다.",
+                "'질문이 있는 서울형 토론' 모델을 이해하고 수업에 적용하는 방법을 익힌다.",
+                "실제 그림책으로 토론 수업을 체험하고, 자신의 수업에 맞는 지도안을 구상할 수 있다."
+            ],
+            materials: "문화 다양성 주제 그림책 (예: 『알사탕』, 『만희네 집』), 토론 활동지, 필기구",
+            plan: [
+                { stage: "도입 (15분)", detail: "그림책과 만나기: 그림책 함께 읽기 및 첫인상 나누기" },
+                { stage: "전개 1 (40분)", detail: "'질문이 있는 토론' 이론 및 실제: 토론 모델 강의 및 '사실-해석-상상' 질문 만들기 실습" },
+                { stage: "전개 2 (45분)", detail: "독서 토론 수업 시연 및 체험: 모둠별 미니 독서 토론 진행 및 교사의 촉진자 역할 학습" },
+                { stage: "정리 및 나눔 (20분)", detail: "수업 설계 및 소감 공유: 내 학급 적용을 위한 미니 지도안 구상 및 연수 소감 공유" }
+            ]
+        },
+        {
+            title: "스마트폰으로 만드는 '다양성 칸타타'",
+            target: "교사",
+            targetDetail: "음악/예술 교육에 관심 있는 모든 교사",
+            icon: "🎬",
+            summary: "스마트폰 영상 편집 앱을 활용하여 '다양성 칸타타' 음악 프로젝트를 기획부터 제작까지 실습합니다.",
+            goals: [
+                "음악을 통한 문화 다양성 교육의 효과를 이해한다.",
+                "스마트폰 영상 편집 앱(예: CapCut, VLLO)의 기본 기능을 익힌다.",
+                "'다양성 칸타타' 프로젝트의 기획부터 촬영, 편집까지의 과정을 실습하고 결과물을 만들 수 있다."
+            ],
+            materials: "개인 스마트폰(영상 편집 앱 사전 설치), 이어폰, 삼각대(선택), 배경음악 소스",
+            plan: [
+                { stage: "도입 (10분)", detail: "영감 얻기: 우수 영상 감상 및 저작권 유의사항 안내" },
+                { stage: "전개 1 (50분)", detail: "영상 촬영 및 편집 앱 실습: 앱 핵심 기능 학습 및 미니 영상 콘티 작성/촬영" },
+                { stage: "전개 2 (40분)", detail: "나만의 영상 편집하기: 촬영 소스를 바탕으로 영상 편집 실습" },
+                { stage: "정리 및 나눔 (20분)", detail: "시사회 및 활용 방안 모색: 완성 영상 시사회 및 학교 현장 적용 팁 공유" }
+            ]
+        },
+        {
+            title: "'역사 속 다양성 리더' 탐구 프로젝트",
+            target: "교사",
+            targetDetail: "사회/역사 교사, 학생 자치 담당 교사",
+            icon: "🏛️",
+            summary: "'Doing History' 기반의 역사 탐구 수업 모델을 이해하고, '역사 속 다양성 리더' 주제의 프로젝트를 설계합니다.",
+            goals: [
+                "역사 교육과 문화 다양성 교육의 융합 가능성을 탐색한다.",
+                "'Doing History' 기반의 역사 탐구 수업 모델을 이해한다.",
+                "'역사 속 다양성 리더'를 주제로 한 프로젝트 수업을 직접 설계할 수 있다."
+            ],
+            materials: "노트북, 역사 인물 관련 자료(텍스트, 이미지), 프로젝트 수업 설계 양식",
+            plan: [
+                { stage: "도입 (15분)", detail: "주제 열기: '내가 생각하는 다양성 리더' 이야기 나누기 및 관련 수업 사례 소개" },
+                { stage: "전개 1 (45분)", detail: "탐구 주제 발굴 및 자료 분석: '다양성 리더' 선정 및 1차 사료 분석 방법 학습" },
+                { stage: "전개 2 (40분)", detail: "프로젝트 수업안 디자인: 백워드 설계 모형을 활용하여 4차시 분량의 수업 과정안 설계" },
+                { stage: "정리 및 나눔 (20분)", detail: "수업 나눔 및 동료 컨설팅: 수업 설계안 발표 및 학생 자치 활동 연계 방안 모색" }
+            ]
+        },
+        {
+            title: "'기후 행동 365' 다국어 캠페인",
+            target: "공동",
+            targetDetail: "학생 환경 동아리, 학생회 및 담당 교사",
+            icon: "🌍",
+            summary: "기후 위기와 문화 다양성을 연계하여, 다양한 언어로 환경 캠페인 슬로건과 홍보물을 제작하는 공동 워크숍입니다.",
+            goals: [
+                "기후 위기와 문화 다양성의 연관성을 이해한다.",
+                "효과적인 캠페인 기획 및 홍보 전략을 수립할 수 있다.",
+                "다양한 언어를 활용한 캠페인 슬로건과 피켓을 직접 제작할 수 있다."
+            ],
+            materials: "재활용 박스, 색상지, 매직, 크레파스, 다국어 번역 앱이 설치된 스마트폰",
+            plan: [
+                { stage: "도입 (15분)", detail: "문제 공감하기: 기후 위기 영상 시청 및 '왜 다국어 캠페인일까?' 토의" },
+                { stage: "전개 1 (40분)", detail: "캠페인 기획하기: 캠페인 목표, 대상, 메시지 구상 및 다국어 슬로건 만들기" },
+                { stage: "전개 2 (45분)", detail: "캠페인 홍보물 제작: 재활용품을 활용하여 다국어 홍보물 제작" },
+                { stage: "정리 및 나눔 (20분)", detail: "실천 선포식: 홍보물 발표 및 '기후 행동 365' 실천 다짐 선서" }
+            ]
+        },
+        {
+            title: "'우리 동네 역사 탐험대' 학부모 연수",
+            target: "학부모",
+            targetDetail: "초등학생 학부모 (이주배경 학부모 포함)",
+            icon: "👨‍👩‍👧‍👦",
+            summary: "자녀와 함께 우리 동네의 역사·문화 자원을 탐방하고, 그 경험을 의미 있는 교육 자료로 만드는 방법을 배웁니다.",
+            goals: [
+                "지역 사회 역사·문화 자원의 교육적 가치를 이해한다.",
+                "자녀와 함께 즐겁고 의미 있는 역사 탐방을 계획하고 실행하는 방법을 배운다.",
+                "탐방 결과를 교육 자료로 만드는 간단한 팁을 익혀 가정과 학교 연계 교육에 기여할 수 있다."
+            ],
+            materials: "지역 지도(온/오프라인), 스마트폰, 탐방 활동지 예시, 필기구",
+            plan: [
+                { stage: "도입 (15분)", detail: "우리 동네 다시 보기: '우리 동네 하면 떠오르는 것' 이야기 나누기" },
+                { stage: "전개 1 (40분)", detail: "탐험 계획 세우기: 동네 숨은 역사 자원 찾기 및 자녀와 함께할 탐방 계획 수립" },
+                { stage: "전개 2 (45분)", detail: "탐험 기록가 되기: '가족 탐험 일지' 작성법 및 스마트폰을 활용한 기록/편집 팁 실습" },
+                { stage: "정리 및 나눔 (20분)", detail: "탐험 계획 공유 및 격려: 모둠별 탐방 계획 나누기 및 '가족 탐험대' 발대식" }
+            ]
+        },
+        {
+            title: "'찾아가는 차별 금지 인권 교실' 워크숍",
+            target: "교사",
+            targetDetail: "초·중학교 담임교사, 상담 교사, 인권 담당 교사",
+            icon: "🤝",
+            summary: "교실 내 차별 상황을 인지하고, 참여형 인권 교육 활동을 통해 차이를 존중하는 교실 문화를 만드는 방법을 배웁니다.",
+            goals: [
+                "'차이'와 '차별'의 개념을 명확히 이해하고 자신의 인권 감수성을 점검한다.",
+                "교실에서 발생할 수 있는 다양한 차별 상황을 인지하는 능력을 기른다.",
+                "참여형·체험형 인권 교육 활동을 익혀 학급에 적용할 수 있다."
+            ],
+            materials: "다양한 차별 상황이 담긴 역할극 카드, 인권 관련 영상 자료, 활동지",
+            plan: [
+                { stage: "도입 (15분)", detail: "내 안의 감수성 점검하기: 인권 감수성 자가 진단 및 교실 속 차별 경험 나누기" },
+                { stage: "전개 1 (40분)", detail: "차별의 여러 얼굴 마주하기: '선량한 차별주의자' 영상 토의 및 역할극" },
+                { stage: "전개 2 (45분)", detail: "인권 친화적 교실 문화 디자인: '차별 없는 우리 반 약속' 만들기 및 갈등 해결 서클 대화법 체험" },
+                { stage: "정리 및 나눔 (20분)", detail: "실천 아이디어 공유: 학급 적용 아이디어 나누기 및 연수 소감 공유" }
+            ]
+        },
+        {
+            title: "'이중언어 말하기 대회' 코칭 워크숍",
+            target: "학생",
+            targetDetail: "이중언어 말하기 대회 참가 희망 학생",
+            icon: "🎤",
+            summary: "자신의 생각과 경험을 논리적인 원고로 구성하고, 대중 앞에서 자신감 있게 발표하는 방법을 연습합니다.",
+            goals: [
+                "대중 앞에서 자신감 있게 발표하는 태도를 기른다.",
+                "자신의 생각과 경험을 논리적으로 구성하여 원고를 작성하는 방법을 배운다.",
+                "효과적인 전달을 위한 비언어적 표현(시선, 제스처, 목소리 톤)을 연습한다."
+            ],
+            materials: "원고 작성지, 필기구, 거울, 스마트폰(발표 녹화용), 발표 예시 영상",
+            plan: [
+                { stage: "도입 (15분)", detail: "스피치와 친해지기: '30초 자기소개' 릴레이 및 감동적인 스피치 영상 감상" },
+                { stage: "전개 1 (45분)", detail: "나만의 이야기 설계하기: 마인드맵으로 아이디어 구체화 및 3단 구조 원고 작성" },
+                { stage: "전개 2 (40분)", detail: "몸으로 말하기: 비언어적 표현 훈련 및 짝과 함께 상호 코칭" },
+                { stage: "정리 및 나눔 (20분)", detail: "용기 있는 발표: 모둠 내 1분 스피치 발표 및 긍정적 피드백 주고받기" }
+            ]
+        },
+        {
+            title: "'문화 다양성 예술 체험' 교사 멘토링",
+            target: "교사",
+            targetDetail: "멘토 교사 및 멘티 교사 (저경력 교사)",
+            icon: "🎨",
+            summary: "예술 작품을 매개로 멘토-멘티 교사가 공감대를 형성하고, 효과적인 멘토링 관계를 수립하는 사전 워크숍입니다.",
+            goals: [
+                "예술 작품을 통한 문화 다양성 이해의 중요성을 인식한다.",
+                "효과적인 멘토링의 기본 원리와 공감적 대화법을 익힌다.",
+                "멘토-멘티가 함께 할 예술 체험 활동을 공동으로 계획하고 긍정적 관계를 형성한다."
+            ],
+            materials: "멘토링 활동 안내 자료, 대화 카드, 전시회/공연 정보 자료, 멘토링 계획서 양식",
+            plan: [
+                { stage: "도입 (15분)", detail: "우리, 만나서 반가워요: 파트너 소개 및 라포 형성 활동" },
+                { stage: "전개 1 (40분)", detail: "공감 대화법 익히기: 경청과 질문의 중요성 강의 및 공감적 대화 나누기 실습" },
+                { stage: "전개 2 (45분)", detail: "우리만의 예술 여행 계획하기: 문화 다양성 주제 예술 정보 탐색 및 멘토링 계획서 작성" },
+                { stage: "정리 및 나눔 (20분)", detail: "약속과 다짐: 멘토링 계획 발표 및 서로에게 바라는 점 이야기하기" }
+            ]
+        },
+        {
+            title: "'문화 다양성 정책 포럼' 참여 워크숍",
+            target: "공동",
+            targetDetail: "정책 제안에 관심 있는 중·고등학생 및 학부모",
+            icon: "🏛️",
+            summary: "학교 현장의 문제점을 바탕으로 실질적인 정책 아이디어를 발굴하고, 설득력 있는 정책 제안서로 작성해봅니다.",
+            goals: [
+                "현재 문화 다양성 교육 정책의 현황과 과제를 이해한다.",
+                "학교 현장에서 느끼는 문제점을 바탕으로 구체적인 정책 아이디어를 발굴한다.",
+                "자신의 아이디어를 논리적이고 설득력 있는 정책 제안서 형태로 작성하는 방법을 배운다."
+            ],
+            materials: "노트북 또는 태블릿, 정책 제안서 양식, 관련 뉴스 기사/통계 자료",
+            plan: [
+                { stage: "도입 (15분)", detail: "정책, 왜 중요할까?: '학교에 이런 제도가 생겼으면!' 이야기 및 정책 참여 사례 소개" },
+                { stage: "전개 1 (40분)", detail: "문제 발견 및 아이디어 발상: 관련 자료 기반 문제점 토의 및 정책 아이디어 도출" },
+                { stage: "전개 2 (45분)", detail: "설득력 있는 제안서 쓰기: 정책 제안서 작성법 학습 및 초안 작성" },
+                { stage: "정리 및 나눔 (20분)", detail: "우리의 제안을 발표합니다: 정책 제안서 발표 및 실제 포럼 참여 방법 안내" }
+            ]
+        }
+    ];
+
+    const grid = document.getElementById('workshop-grid');
+    const modal = document.getElementById('workshop-modal');
+    const modalContent = document.getElementById('modal-content');
+    const closeModalButton = document.getElementById('close-modal-button');
+    const filterButtons = document.querySelectorAll('.filter-button');
+
+    const renderWorkshops = (filteredWorkshops) => {
+        grid.innerHTML = '';
+        filteredWorkshops.forEach((ws, index) => {
+            const card = document.createElement('div');
+            card.className = 'bg-white rounded-xl shadow-md p-6 flex flex-col items-center text-center cursor-pointer transition transform hover:-translate-y-1 hover:shadow-lg';
+            card.dataset.index = index;
+
+            card.innerHTML = `
+                <div class="card-icon mb-4">${ws.icon}</div>
+                <h3 class="font-bold text-lg text-gray-800">${ws.title}</h3>
+                <span class="mt-2 text-sm font-medium py-1 px-3 rounded-full ${ws.target === '교사' ? 'bg-blue-100 text-blue-800' : ws.target === '학생' ? 'bg-green-100 text-green-800' : ws.target === '학부모' ? 'bg-yellow-100 text-yellow-800' : 'bg-purple-100 text-purple-800'}">${ws.targetDetail}</span>
+                <p class="mt-3 text-sm text-gray-600 flex-grow">${ws.summary}</p>
+            `;
+            
+            card.addEventListener('click', () => openModal(ws));
+            grid.appendChild(card);
+        });
+    };
+    
+    const openModal = (ws) => {
+        modalContent.innerHTML = `
+            <div class="flex items-start justify-between mb-4">
+                <div>
+                    <h2 class="text-2xl sm:text-3xl font-bold text-gray-900">${ws.title}</h2>
+                    <p class="mt-2 text-base text-gray-600"><strong>대상:</strong> ${ws.targetDetail}</p>
+                </div>
+                 <div class="text-5xl ml-4 hidden sm:block">${ws.icon}</div>
+            </div>
+
+            <div class="space-y-6 mt-6">
+                <div>
+                    <h4 class="font-semibold text-lg text-teal-700 border-b-2 border-teal-200 pb-2 mb-3">연수 목표</h4>
+                    <ul class="list-disc list-inside space-y-1 text-gray-700">
+                        ${ws.goals.map(goal => `<li>${goal}</li>`).join('')}
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-semibold text-lg text-teal-700 border-b-2 border-teal-200 pb-2 mb-3">준비물</h4>
+                    <p class="text-gray-700">${ws.materials}</p>
+                </div>
+                <div>
+                    <h4 class="font-semibold text-lg text-teal-700 border-b-2 border-teal-200 pb-2 mb-3">세부 활동 계획 (총 120분)</h4>
+                    <div class="space-y-3">
+                        ${ws.plan.map(p => `
+                            <div class="p-3 bg-gray-50 rounded-md">
+                                <p class="font-semibold text-gray-800">${p.stage}</p>
+                                <p class="text-sm text-gray-600 mt-1">${p.detail}</p>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            </div>
+        `;
+        document.body.classList.add('modal-active');
+        modal.classList.remove('opacity-0', 'pointer-events-none');
+        modal.querySelector('div > div').classList.remove('scale-95');
+    };
+
+    const closeModal = () => {
+        document.body.classList.remove('modal-active');
+        modal.classList.add('opacity-0', 'pointer-events-none');
+        modal.querySelector('div > div').classList.add('scale-95');
+    };
+
+    closeModalButton.addEventListener('click', closeModal);
+    modal.addEventListener('click', (event) => {
+        if (event.target === modal) {
+            closeModal();
+        }
+    });
+
+    filterButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            filterButtons.forEach(btn => btn.classList.remove('active'));
+            button.classList.add('active');
+            
+            const filter = button.dataset.filter;
+            let filteredWorkshops = workshops;
+            
+            if (filter !== 'all') {
+                 if (filter === '공동') {
+                    filteredWorkshops = workshops.filter(ws => ws.target === '공동' || ws.target === '학부모');
+                 } else {
+                    filteredWorkshops = workshops.filter(ws => ws.target === filter);
+                 }
+            }
+            
+            // Adjust card click handler to use correct index from original array
+            const originalIndices = filteredWorkshops.map(ws => workshops.indexOf(ws));
+            grid.innerHTML = '';
+             filteredWorkshops.forEach((ws, i) => {
+                const card = document.createElement('div');
+                card.className = 'bg-white rounded-xl shadow-md p-6 flex flex-col items-center text-center cursor-pointer transition transform hover:-translate-y-1 hover:shadow-lg';
+                
+                let targetDisplay;
+                if(ws.target === '공동' && filter === '공동'){
+                    targetDisplay = ws.targetDetail
+                } else {
+                    targetDisplay = ws.targetDetail
+                }
+
+                card.innerHTML = `
+                    <div class="card-icon mb-4">${ws.icon}</div>
+                    <h3 class="font-bold text-lg text-gray-800">${ws.title}</h3>
+                    <span class="mt-2 text-sm font-medium py-1 px-3 rounded-full ${ws.target === '교사' ? 'bg-blue-100 text-blue-800' : ws.target === '학생' ? 'bg-green-100 text-green-800' : ws.target === '학부모' ? 'bg-yellow-100 text-yellow-800' : 'bg-purple-100 text-purple-800'}">${targetDisplay}</span>
+                    <p class="mt-3 text-sm text-gray-600 flex-grow">${ws.summary}</p>
+                `;
+                
+                card.addEventListener('click', () => openModal(ws));
+                grid.appendChild(card);
+            });
+        });
+    });
+
+    document.addEventListener('keydown', e => {
+        if (e.key === "Escape" && document.body.classList.contains('modal-active')) {
+            closeModal();
+        }
+    });
+
+    // Initial render
+    renderWorkshops(workshops);
+    </script>
+</body>
+</html>
